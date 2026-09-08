@@ -349,3 +349,5 @@ app.get('/client-by-telegram', async (req, res) => {
     });
   }
 });
+
+export default app;
