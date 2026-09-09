@@ -307,6 +307,8 @@ app.get('/client-by-telegram', async (req, res) => {
     const initData = authHeader?.startsWith('tma ')
       ? authHeader.slice(4)
       : null;
+      
+    console.log('AUTH HEADER:', authHeader ? 'Є' : 'НЕМАЄ');
 
     if (!initData) {
       return res.status(400).json({
