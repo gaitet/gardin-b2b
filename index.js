@@ -301,20 +301,17 @@ function validateTelegramInitData(initData) {
 
   return calculatedHash === receivedHash;
 }
-app.get('/client-by-telegram', async (req, res) => {
+async function authenticateTelegram(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
-    const initData = authHeader?.startsWith('tma ')
-      ? authHeader.slice(4)
-      : null;
-      
-    console.log('AUTH HEADER:', authHeader ? 'Є' : 'НЕМАЄ');
 
-    if (!initData) {
-      return res.status(400).json({
-        error: 'Не передано Telegram initData',
+    if (!authHeader?.startsWith('tma ')) {
+      return res.status(401).json({
+        error: 'Не передано Telegram авторизацію',
       });
     }
+
+    const initData = authHeader.slice(4);
 
     if (!validateTelegramInitData(initData)) {
       return res.status(401).json({
@@ -324,7 +321,6 @@ app.get('/client-by-telegram', async (req, res) => {
 
     const params = new URLSearchParams(initData);
     const user = JSON.parse(params.get('user'));
-
     const telegramId = user.id;
 
     const response = await api.get('/clients', {
@@ -341,16 +337,31 @@ app.get('/client-by-telegram', async (req, res) => {
       });
     }
 
-    res.json(clients[0]);
+    req.authClient = clients[0];
+
+    next();
   } catch (error) {
     console.error(
-      'Помилка пошуку за Telegram ID:',
+      'Помилка Telegram авторизації:',
       error.response?.data || error.message
     );
 
     res.status(500).json({
-      error: 'Не вдалося знайти клієнта',
-      details: error.response?.data || error.message,
+      error: 'Не вдалося перевірити Telegram користувача',
+    });
+  }
+}
+app.get('/client-by-telegram', authenticateTelegram, async (req, res) => {
+  try {
+    res.json(req.authClient);
+  } catch (error) {
+    console.error(
+      'Помилка отримання даних дилера:',
+      error.response?.data || error.message
+    );
+
+    res.status(500).json({
+      error: 'Не вдалося отримати дані дилера',
     });
   }
 });
