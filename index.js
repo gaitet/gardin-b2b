@@ -303,7 +303,10 @@ function validateTelegramInitData(initData) {
 }
 app.get('/client-by-telegram', async (req, res) => {
   try {
-    const { initData } = req.query;
+    const authHeader = req.headers.authorization;
+    const initData = authHeader?.startsWith('tma ')
+      ? authHeader.slice(4)
+      : null;
 
     if (!initData) {
       return res.status(400).json({
