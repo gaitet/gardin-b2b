@@ -91,12 +91,13 @@ app.get('/stages', async (req, res) => {
   }
 });
 
-app.post('/orders', async (req, res) => {
+app.post('/orders', authenticateTelegram, async (req, res) => {
   try {
-    const { dealerName, keepinClientId, items } = req.body;
+    const { items } = req.body;
 
-    const clientResponse = await api.get(`/clients/${keepinClientId}`);
-    const client = clientResponse.data;
+    const client = req.authClient;
+    const keepinClientId = client.id;
+    const dealerName = client.company || client.person || '';
 
     const dealerDiscount = Number(client.discount) || 0;
 
