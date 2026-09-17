@@ -173,15 +173,10 @@ app.get('/agreement/:id', async (req, res) => {
   }
 });
 
-app.get('/orders', async (req, res) => {
+app.get('/orders', authenticateTelegram, async (req, res) => {
   try {
-    const { clientId, page = 1 } = req.query;
-
-    if (!clientId) {
-      return res.status(400).json({
-        error: 'Не вказано clientId',
-      });
-    }
+    const clientId = req.authClient.id;
+    const { page = 1 } = req.query;
 
     const response = await api.get('/agreements', {
       params: {
@@ -199,7 +194,6 @@ app.get('/orders', async (req, res) => {
 
     res.status(500).json({
       error: 'Не вдалося отримати замовлення',
-      details: error.response?.data || error.message,
     });
   }
 });
